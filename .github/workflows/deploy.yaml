@@ -44,15 +44,25 @@ jobs:
     - name: Build Bicep params file
       run: az bicep build-params --file main.dev.bicepparam
 
-    - name: Bicep What-If
-      uses: azure/arm-deploy@v2
+    - name: "What-If"
+      uses: Azure/cli@v1
       with:
-        subscriptionId: ${{ env.SUBSCRIPTION_ID }}
-        resourceGroupName: ${{ env.AZURE_RG }}
-        failOnStdErr: false
-        template: ${{ env.INFRA_PATH }}main.bicep
-        parameters: ${{ env.INFRA_PATH }}main.dev.json
-        additionalArguments: "--what-if --rollback-on-error > whatif"
+        inlineScript: |
+          az deployment sub what-if \
+            --name whatif-${{ github.run_id }} \
+            --template-file ${{ env.INFRA_PATH }}main.bicep \
+            --parameters ${{ env.INFRA_PATH }}main.dev.json \
+            --location $LOCATION > whatif
+
+    # - name: Bicep What-If
+    #   uses: azure/arm-deploy@v2
+    #   with:
+    #     subscriptionId: ${{ env.SUBSCRIPTION_ID }}
+    #     resourceGroupName: ${{ env.AZURE_RG }}
+    #     failOnStdErr: false
+    #     template: ${{ env.INFRA_PATH }}main.bicep
+    #     parameters: ${{ env.INFRA_PATH }}main.dev.json
+    #     additionalArguments: "--what-if --rollback-on-error"
 
     - name: Create String Output
       id: whatif-string
