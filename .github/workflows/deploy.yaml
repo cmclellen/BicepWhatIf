@@ -52,30 +52,29 @@ jobs:
         failOnStdErr: false
         template: ${{ env.INFRA_PATH }}main.bicep
         parameters: ${{ env.INFRA_PATH }}main.dev.json
-        additionalArguments: "--what-if --rollback-on-error"
+        additionalArguments: "--what-if --rollback-on-error > whatif"
 
-  #   - name: Create String Output
-  #     id: whatif-string
-  #     run: |
-  #       WHATIF=$(cat whatif)
+    - name: Create String Output
+      id: whatif-string
+      run: |
+        WHATIF=$(cat whatif)
         
-  #       delimiter="$(openssl rand -hex 8)"
-  #       echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
-  #       echo "## Whatif Output" >> $GITHUB_OUTPUT
-  #       echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
-  #       echo "" >> $GITHUB_OUTPUT
-  #       echo '```' >> $GITHUB_OUTPUT
-  #       echo "$WHATIF" >> $GITHUB_OUTPUT
-  #       echo '```' >> $GITHUB_OUTPUT
-  #       echo "</details>" >> $GITHUB_OUTPUT
-  #       echo "${delimiter}" >> $GITHUB_OUTPUT
+        delimiter="$(openssl rand -hex 8)"
+        echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+        echo "## Whatif Output" >> $GITHUB_OUTPUT
+        echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo '```' >> $GITHUB_OUTPUT
+        echo "$WHATIF" >> $GITHUB_OUTPUT
+        echo '```' >> $GITHUB_OUTPUT
+        echo "</details>" >> $GITHUB_OUTPUT
+        echo "${delimiter}" >> $GITHUB_OUTPUT
 
-  #   # Publish Terraform Plan as task summary
-  #   - name: Publish Whatif to Task Summary
-  #     env:
-  #       SUMMARY: ${{ steps.whatif-string.outputs.summary }}
-  #     run: |
-  #       echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+    - name: Publish Whatif to Task Summary
+      env:
+        SUMMARY: ${{ steps.whatif-string.outputs.summary }}
+      run: |
+        echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
       
   #   # If this is a PR post the changes
   #   - name: Push Whatif Output to PR
