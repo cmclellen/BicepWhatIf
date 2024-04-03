@@ -102,8 +102,8 @@ jobs:
       uses: Azure/cli@v1
       with:
         inlineScript: |
-          az deployment group \
-            --name whatif-${{ github.run_id }} \
+          az deployment group create \
+            --name deploy-${{ github.run_id }} \
             --subscription ${{ env.SUBSCRIPTION_ID }} \
             --resource-group ${{ env.AZURE_RG }} \
             --template-file ${{ env.INFRA_PATH }}main.bicep \
