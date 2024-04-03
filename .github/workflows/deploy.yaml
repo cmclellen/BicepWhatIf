@@ -16,8 +16,6 @@ on:
       - main
       - feature/*
   workflow_dispatch:
-  pull_request_review:
-    types: [submitted]
 
 env:
   INFRA_PATH: ./
@@ -29,7 +27,6 @@ jobs:
   bicep-whatif:
     runs-on: ubuntu-latest
     environment: dev
-    if: github.event.review.state != 'approved'
     defaults:
       run:
         shell: bash
@@ -83,7 +80,7 @@ jobs:
   bicep-deploy:
     name: 'Bicep Deploy'
     runs-on: ubuntu-latest
-    if: github.event.review.state == 'approved'
+    if: github.ref == 'refs/heads/main'
     environment: dev
     needs: [bicep-whatif]
     
