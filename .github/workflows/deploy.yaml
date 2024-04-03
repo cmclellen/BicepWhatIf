@@ -54,8 +54,7 @@ jobs:
             --subscription ${{ env.SUBSCRIPTION_ID }} \
             --resource-group ${{ env.AZURE_RG }} \
             --template-file ${{ env.INFRA_PATH }}main.bicep \
-            --parameters ${{ env.INFRA_PATH }}main.dev.json \
-            --location $LOCATION > whatif
+            --parameters ${{ env.INFRA_PATH }}main.dev.json > whatif
 
     # - name: Bicep What-If
     #   uses: azure/arm-deploy@v2
