@@ -21,12 +21,13 @@ env:
   INFRA_PATH: ./
   AZURE_RG: BicepTest
   SUBSCRIPTION_ID: 761399c5-3790-4380-b6a8-a11554fafa7a
+  ENVIRONMENT_NAME: dev
 
 jobs:
 
   bicep-whatif:
     runs-on: ubuntu-latest
-    environment: dev
+    environment: ${{ env.ENVIRONMENT_NAME}}
     defaults:
       run:
         shell: bash
@@ -81,7 +82,7 @@ jobs:
     name: 'Bicep Deploy'
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    environment: dev
+    environment: ${{ env.ENVIRONMENT_NAME}}
     needs: [bicep-whatif]
     
     steps:
