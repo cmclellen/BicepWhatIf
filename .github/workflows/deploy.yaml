@@ -51,6 +51,7 @@ jobs:
         inlineScript: |
           az deployment sub what-if \
             --name whatif-${{ github.run_id }} \
+            --subscription ${{ env.SUBSCRIPTION_ID }} \
             --template-file ${{ env.INFRA_PATH }}main.bicep \
             --parameters ${{ env.INFRA_PATH }}main.dev.json \
             --location $LOCATION > whatif
