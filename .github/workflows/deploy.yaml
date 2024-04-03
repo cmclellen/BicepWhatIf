@@ -1,0 +1,116 @@
+name: Check & Provision infrastructure
+
+on:
+  push:
+    paths:
+      - src/DailyFile-ID0001/infrastructure/**
+      - .github/workflows/deploy.yaml
+    branches:
+      - main
+      - feature/*
+  pull_request:
+    paths:
+      - src/DailyFile-ID0001/infrastructure/**
+      - .github/workflows/deploy.yaml
+    branches:
+      - main
+      - feature/*
+  workflow_dispatch:
+
+jobs:
+
+  bicep-whatif:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Log into Azure
+      uses: azure/login@v2
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+
+    - name: Build Bicep params file
+      working-directory: ${{ env.INFRA_PATH }}
+      run: az bicep build-params --file main.dev.bicepparam
+
+    - name: Bicep What-If
+      uses: azure/arm-deploy@v2
+      with:
+        subscriptionId: ${{ inputs.subscriptionId }}
+        resourceGroupName: ${{ env.AZURE_RG }}
+        failOnStdErr: false
+        template: ${{ env.INFRA_PATH }}main.bicep
+        parameters: ${{ env.INFRA_PATH }}main.dev.json
+        additionalArguments: "--what-if --rollback-on-error"
+
+  #   - name: Create String Output
+  #     id: whatif-string
+  #     run: |
+  #       WHATIF=$(cat whatif)
+        
+  #       delimiter="$(openssl rand -hex 8)"
+  #       echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+  #       echo "## Whatif Output" >> $GITHUB_OUTPUT
+  #       echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+  #       echo "" >> $GITHUB_OUTPUT
+  #       echo '```' >> $GITHUB_OUTPUT
+  #       echo "$WHATIF" >> $GITHUB_OUTPUT
+  #       echo '```' >> $GITHUB_OUTPUT
+  #       echo "</details>" >> $GITHUB_OUTPUT
+  #       echo "${delimiter}" >> $GITHUB_OUTPUT
+
+  #   # Publish Terraform Plan as task summary
+  #   - name: Publish Whatif to Task Summary
+  #     env:
+  #       SUMMARY: ${{ steps.whatif-string.outputs.summary }}
+  #     run: |
+  #       echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+      
+  #   # If this is a PR post the changes
+  #   - name: Push Whatif Output to PR
+  #     if: github.ref != 'refs/heads/main'
+  #     uses: actions/github-script@v6
+  #     env:
+  #       SUMMARY: "${{ steps.whatif-string.outputs.summary }}"
+  #     with:
+  #         github-token: ${{ secrets.GITHUB_TOKEN }}
+  #         script: |
+  #           const body = `${process.env.SUMMARY}`;
+  #           github.rest.issues.createComment({
+  #               issue_number: context.issue.number,
+  #               owner: context.repo.owner,
+  #               repo: context.repo.repo,
+  #               body: body
+  #           })
+
+  # bicep-deploy:
+  #   name: 'Bicep Deploy'
+  #   runs-on: ubuntu-latest
+  #   environment: dev
+  #   needs: [bicep-whatif]
+    
+  #   steps:
+    
+  #   - name: Checkout
+  #     uses: actions/checkout@v4
+
+  #   - name: Log into Azure
+  #     uses: azure/login@v2
+  #     with:
+  #       creds: '${{ secrets.AZURE_CREDENTIALS }}'
+
+  #   - name: Build Bicep params file
+  #     working-directory: ${{ env.INFRA_PATH }}
+  #     run: az bicep build-params --file main.dev.bicepparam
+
+  #   - name: Bicep Deploy
+  #     uses: Azure/cli@v1
+  #     with:
+  #       inlineScript: |
+  #         az deployment sub create \
+  #           --name deploy-${{ github.run_id }} \
+  #           --template-file main.bicep \
+  #           --location $LOCATION 
