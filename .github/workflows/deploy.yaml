@@ -16,6 +16,8 @@ on:
       - main
       - feature/*
   workflow_dispatch:
+  pull_request_review:
+    types: [submitted]
 
 env:
   INFRA_PATH: ./
@@ -28,6 +30,7 @@ jobs:
   bicep-whatif:
     runs-on: ubuntu-latest
     environment: dev
+    if: github.event.review.state != 'approved'
     defaults:
       run:
         shell: bash
@@ -56,16 +59,6 @@ jobs:
             --template-file ${{ env.INFRA_PATH }}main.bicep \
             --parameters ${{ env.INFRA_PATH }}main.dev.json > whatif
 
-    # - name: Bicep What-If
-    #   uses: azure/arm-deploy@v2
-    #   with:
-    #     subscriptionId: ${{ env.SUBSCRIPTION_ID }}
-    #     resourceGroupName: ${{ env.AZURE_RG }}
-    #     failOnStdErr: false
-    #     template: ${{ env.INFRA_PATH }}main.bicep
-    #     parameters: ${{ env.INFRA_PATH }}main.dev.json
-    #     additionalArguments: "--what-if --rollback-on-error"
-
     - name: Create String Output
       id: whatif-string
       run: |
@@ -88,48 +81,34 @@ jobs:
       run: |
         echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
       
-  #   # If this is a PR post the changes
-  #   - name: Push Whatif Output to PR
-  #     if: github.ref != 'refs/heads/main'
-  #     uses: actions/github-script@v6
-  #     env:
-  #       SUMMARY: "${{ steps.whatif-string.outputs.summary }}"
-  #     with:
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-  #         script: |
-  #           const body = `${process.env.SUMMARY}`;
-  #           github.rest.issues.createComment({
-  #               issue_number: context.issue.number,
-  #               owner: context.repo.owner,
-  #               repo: context.repo.repo,
-  #               body: body
-  #           })
-
-  # bicep-deploy:
-  #   name: 'Bicep Deploy'
-  #   runs-on: ubuntu-latest
-  #   environment: dev
-  #   needs: [bicep-whatif]
+  bicep-deploy:
+    name: 'Bicep Deploy'
+    runs-on: ubuntu-latest
+    if: github.event.review.state == 'approved'
+    environment: dev
+    needs: [bicep-whatif]
     
-  #   steps:
-    
-  #   - name: Checkout
-  #     uses: actions/checkout@v4
+    steps:
 
-  #   - name: Log into Azure
-  #     uses: azure/login@v2
-  #     with:
-  #       creds: '${{ secrets.AZURE_CREDENTIALS }}'
+    - name: Checkout
+      uses: actions/checkout@v4
 
-  #   - name: Build Bicep params file
-  #     working-directory: ${{ env.INFRA_PATH }}
-  #     run: az bicep build-params --file main.dev.bicepparam
+    - name: Log into Azure
+      uses: azure/login@v2
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
 
-  #   - name: Bicep Deploy
-  #     uses: Azure/cli@v1
-  #     with:
-  #       inlineScript: |
-  #         az deployment sub create \
-  #           --name deploy-${{ github.run_id }} \
-  #           --template-file main.bicep \
-  #           --location $LOCATION 
+    - name: Build Bicep params file
+      working-directory: ${{ env.INFRA_PATH }}
+      run: az bicep build-params --file main.dev.bicepparam
+
+    - name: "Deploy"
+      uses: Azure/cli@v1
+      with:
+        inlineScript: |
+          az deployment group \
+            --name whatif-${{ github.run_id }} \
+            --subscription ${{ env.SUBSCRIPTION_ID }} \
+            --resource-group ${{ env.AZURE_RG }} \
+            --template-file ${{ env.INFRA_PATH }}main.bicep \
+            --parameters ${{ env.INFRA_PATH }}main.dev.json
