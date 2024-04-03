@@ -27,7 +27,8 @@ jobs:
 
   bicep-whatif:
     runs-on: ubuntu-latest
-    environment: '${{ env.ENVIRONMENT_NAME}}'
+    environment:
+      name: ${{ env.ENVIRONMENT_NAME}}
     defaults:
       run:
         shell: bash
@@ -82,7 +83,8 @@ jobs:
     name: 'Bicep Deploy'
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    environment: '${{ env.ENVIRONMENT_NAME}}'
+    environment: 
+      name: '${{ env.ENVIRONMENT_NAME}}'
     needs: [bicep-whatif]
     
     steps:
