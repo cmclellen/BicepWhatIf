@@ -23,7 +23,6 @@ env:
   INFRA_PATH: ./
   AZURE_RG: BicepTest
   SUBSCRIPTION_ID: 761399c5-3790-4380-b6a8-a11554fafa7a
-  LOCATION: "australiaeast"
 
 jobs:
 
