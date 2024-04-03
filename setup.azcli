@@ -1,0 +1,12 @@
+# A few common go-to Azure CLI commands to login to Azure, change subscription, create an SPN, etc.
+
+$TENANT_ID = "dca5775e-99b4-497c-90c1-c8e73396999e"
+$SUBSCRIPTION_ID = "761399c5-3790-4380-b6a8-a11554fafa7a"
+$RG_NAME = "BicepTest"
+$SPN_NAME = "BicepTest-dev"
+
+az login --tenant $TENANT_ID
+
+az account set --subscription $SUBSCRIPTION_ID
+
+az ad sp create-for-rbac --name "$SPN_NAME" --role owner --scopes /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME --json-auth

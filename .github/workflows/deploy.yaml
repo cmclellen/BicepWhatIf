@@ -17,11 +17,20 @@ on:
       - feature/*
   workflow_dispatch:
 
+env:
+  INFRA_PATH: ./
+  AZURE_RG: BicepTest
+  SUBSCRIPTION_ID: 761399c5-3790-4380-b6a8-a11554fafa7a
+
 jobs:
 
   bicep-whatif:
     runs-on: ubuntu-latest
     environment: dev
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.INFRA_PATH }}
     steps:
 
     - name: Checkout
@@ -33,13 +42,12 @@ jobs:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
 
     - name: Build Bicep params file
-      working-directory: ${{ env.INFRA_PATH }}
       run: az bicep build-params --file main.dev.bicepparam
 
     - name: Bicep What-If
       uses: azure/arm-deploy@v2
       with:
-        subscriptionId: ${{ inputs.subscriptionId }}
+        subscriptionId: ${{ env.SUBSCRIPTION_ID }}
         resourceGroupName: ${{ env.AZURE_RG }}
         failOnStdErr: false
         template: ${{ env.INFRA_PATH }}main.bicep
